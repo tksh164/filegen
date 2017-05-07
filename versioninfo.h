@@ -1,0 +1,13 @@
+#define VER_FILEVERSION             1,0,0,20130117
+#define VER_FILEVERSION_STR         "1.0.0.20130117"
+#define VER_PRODUCTVERSION          VER_FILEVERSION
+#define VER_PRODUCTVERSION_STR      VER_FILEVERSION_STR
+#define VER_COMPANYNAME_STR         "Microsoft Corporation"
+#define VER_INTERNALNAME_STR        "Filegen"
+#define VER_FILEDESCRIPTION_STR     "File generator."
+#define VER_ORIGINALFILENAME_STR    "filegen.exe"
+#define VER_PRODUCTNAME_STR         "Filegen"
+#define VER_LEGALCOPYRIGHT_STR      "(C) Microsoft Corporation. All rights reserved."
+
+#define VER_PRIVATEBUILD_STR        "Private Build"
+#define VER_SPECIALBUILD_STR        "Special Build"
