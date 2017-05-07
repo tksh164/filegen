@@ -4,9 +4,15 @@
 *.o
 *.obj
 
+# Incremental Linker files
+*.ilk
+
 # Precompiled Headers
 *.gch
 *.pch
+
+# Compiled Resource Script files
+*.res
 
 # Compiled Dynamic libraries
 *.so
@@ -22,6 +28,9 @@
 *.la
 *.a
 *.lib
+
+# Program Debug Database files (Symbol files)
+*.pdb
 
 # Executables
 *.exe
