@@ -170,12 +170,12 @@ PrintParameters(Parameters *params)
 {
     wprintf(L"\n");
     wprintf(L"  File path     : %s\n", params->FilePath);
-    wprintf(L"  File size     : %I64d bytes\n", params->FileSizeInBytes);
+    wprintf(L"  File size     : %I64d bytes\n", params->FileSizeInBytes.QuadPart);
     wprintf(L"  Padding mode  : %s\n",
             params->PaddingMode == ZERO ? L"Zero" : L"Random");
-    wprintf(L"  Block size    : %I64d bytes\n", params->DataBlockSizeInBytes);
-    wprintf(L"  Blocks        : %I64d\n", params->NumDataBlock);
-    wprintf(L"  Remainder size: %I64d bytes\n", params->RemainderDataSizeInBytes);
+    wprintf(L"  Block size    : %ld bytes\n", params->DataBlockSizeInBytes);
+    wprintf(L"  Blocks        : %ld\n", params->NumDataBlock);
+    wprintf(L"  Remainder size: %ld bytes\n", params->RemainderDataSizeInBytes);
     wprintf(L"\n");
 }
 
