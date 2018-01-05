@@ -1,7 +1,7 @@
 # FileGen
 
 ## Description 
-Filegen is the file generation tool. 
+FileGen is the file generation tool. 
 
 ## Usage 
 ````
