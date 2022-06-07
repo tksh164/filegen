@@ -1,6 +1,6 @@
 # FileGen
 
-FileGen is the file generation tool. 
+FileGen is a file generation tool. 
 
 ## Usage 
 
