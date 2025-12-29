@@ -25,7 +25,7 @@
 typedef enum
 {
     UNKNOWN,     // Unknown (Undecided)
-    ZERO,      // Use 0 for file padding
+    ZERO,        // Use 0 for file padding
     RANDOM       // Use random data for file padding
 } PADDING_MODE;
 
