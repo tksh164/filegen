@@ -36,7 +36,7 @@ typedef struct
     LARGE_INTEGER FileSizeInBytes;
     PADDING_MODE  PaddingMode;
     SIZE_T        DataBlockSizeInBytes;
-    LARGE_INTEGER NumDataBlock;
+    LONGLONG      NumDataBlock;
     SIZE_T        RemainderDataSizeInBytes;
 } Parameters;
 
@@ -45,9 +45,9 @@ BOOL ParseCommandLineParameter(INT argc, WCHAR *argv[], Parameters *params);
 VOID PrintParameters(Parameters *params);
 VOID CreateZeroDataFile(HANDLE fileHandle, LARGE_INTEGER fileSizeInBytes);
 VOID CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
-                          LARGE_INTEGER numDataBlock, SIZE_T remainderDataSizeInBytes);
+                          LONGLONG numDataBlock, SIZE_T remainderDataSizeInBytes);
 VOID GenerateRandomDataBlock(BYTE *dataBlock, SIZE_T dataBlockSizeInBytes);
-BOOL WriteDataBlockToFile(HANDLE fileHandle, SIZE_T datalockSizeInBytes, LARGE_INTEGER numDataBlock);
+BOOL WriteDataBlockToFile(HANDLE fileHandle, SIZE_T datalockSizeInBytes, LONGLONG numDataBlock);
 VOID PrintFormatMessage(LPWSTR prefix, DWORD errorNo);
 VOID PrintUsage();
 
@@ -149,11 +149,11 @@ ParseCommandLineParameter(INT argc, WCHAR *argv[], Parameters *params)
     // Number of data blocks
     if (params->FileSizeInBytes.QuadPart > 0)
     {
-        params->NumDataBlock.QuadPart = params->FileSizeInBytes.QuadPart / params->DataBlockSizeInBytes;
+        params->NumDataBlock = params->FileSizeInBytes.QuadPart / params->DataBlockSizeInBytes;
     }
     else
     {
-        params->NumDataBlock.QuadPart = 0;
+        params->NumDataBlock = 0;
     }
 
     // Remainder data size
@@ -172,7 +172,7 @@ PrintParameters(Parameters *params)
     wprintf(L"  Padding mode  : %s\n",
             params->PaddingMode == ZERO ? L"Zero" : L"Random");
     wprintf(L"  Block size    : %zu bytes\n", params->DataBlockSizeInBytes);
-    wprintf(L"  Blocks        : %lld\n", params->NumDataBlock.QuadPart);
+    wprintf(L"  Blocks        : %lld\n", params->NumDataBlock);
     wprintf(L"  Remainder size: %zu bytes\n", params->RemainderDataSizeInBytes);
     wprintf(L"\n");
 }
@@ -199,9 +199,9 @@ CreateZeroDataFile(HANDLE fileHandle, LARGE_INTEGER fileSizeInBytes)
 
 VOID
 CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
-        LARGE_INTEGER numDataBlock, SIZE_T remainderDataSizeInBytes)
+        LONGLONG numDataBlock, SIZE_T remainderDataSizeInBytes)
 {
-    if (numDataBlock.QuadPart == 0 && remainderDataSizeInBytes == 0)
+    if (numDataBlock == 0 && remainderDataSizeInBytes == 0)
     {
         return;  // No need to write data.
     }
@@ -215,9 +215,7 @@ CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
     // Write the remainder data
     if (remainderDataSizeInBytes > 0)
     {
-        LARGE_INTEGER oneBlock {};
-        oneBlock.QuadPart = 1LL;
-        if (!WriteDataBlockToFile(fileHandle, remainderDataSizeInBytes, oneBlock))
+        if (!WriteDataBlockToFile(fileHandle, remainderDataSizeInBytes, 1))
         {
             return;
         }
@@ -245,7 +243,7 @@ GenerateRandomDataBlock(BYTE *dataBlock, SIZE_T dataBlockSizeInBytes)
 
 
 BOOL
-WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, LARGE_INTEGER numDataBlock)
+WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, LONGLONG numDataBlock)
 {
     BOOL result = TRUE;
 
@@ -257,7 +255,7 @@ WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, LARGE_INTEG
         goto Cleanup;
     }
 
-    for (LONGLONG i = 0; i < numDataBlock.QuadPart; i++)
+    for (LONGLONG i = 0; i < numDataBlock; i++)
     {
         GenerateRandomDataBlock(dataBlock, dataBlockSizeInBytes);
 
