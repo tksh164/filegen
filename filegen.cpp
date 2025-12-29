@@ -36,7 +36,7 @@ typedef struct
     LARGE_INTEGER FileSizeInBytes;
     PADDING_MODE  PaddingMode;
     SIZE_T        DataBlockSizeInBytes;
-    SIZE_T        NumDataBlock;
+    LARGE_INTEGER NumDataBlock;
     SIZE_T        RemainderDataSizeInBytes;
 } Parameters;
 
@@ -45,9 +45,9 @@ BOOL ParseCommandLineParameter(INT argc, WCHAR *argv[], Parameters *params);
 VOID PrintParameters(Parameters *params);
 VOID CreateZeroDataFile(HANDLE fileHandle, LARGE_INTEGER fileSizeInBytes);
 VOID CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
-                          SIZE_T numDataBlock, SIZE_T remainderDataSizeInBytes);
+                          LARGE_INTEGER numDataBlock, SIZE_T remainderDataSizeInBytes);
 VOID GenerateRandomDataBlock(BYTE *dataBlock, SIZE_T dataBlockSizeInBytes);
-BOOL WriteDataBlockToFile(HANDLE fileHandle, SIZE_T datalockSizeInBytes, SIZE_T numDataBlock);
+BOOL WriteDataBlockToFile(HANDLE fileHandle, SIZE_T datalockSizeInBytes, LARGE_INTEGER numDataBlock);
 VOID PrintFormatMessage(LPWSTR prefix, DWORD errorNo);
 VOID PrintUsage();
 
@@ -149,17 +149,15 @@ ParseCommandLineParameter(INT argc, WCHAR *argv[], Parameters *params)
     // Number of data blocks
     if (params->FileSizeInBytes.QuadPart > 0)
     {
-        params->NumDataBlock =
-                ((SIZE_T)(params->FileSizeInBytes.QuadPart)) / params->DataBlockSizeInBytes;
+        params->NumDataBlock.QuadPart = params->FileSizeInBytes.QuadPart / params->DataBlockSizeInBytes;
     }
     else
     {
-        params->NumDataBlock = 0;
+        params->NumDataBlock.QuadPart = 0;
     }
 
     // Remainder data size
-    params->RemainderDataSizeInBytes =
-            (SIZE_T)(params->FileSizeInBytes.QuadPart) % params->DataBlockSizeInBytes;
+    params->RemainderDataSizeInBytes = params->FileSizeInBytes.QuadPart % params->DataBlockSizeInBytes;
 
     return TRUE;
 }
@@ -170,12 +168,12 @@ PrintParameters(Parameters *params)
 {
     wprintf(L"\n");
     wprintf(L"  File path     : %s\n", params->FilePath);
-    wprintf(L"  File size     : %I64d bytes\n", params->FileSizeInBytes.QuadPart);
+    wprintf(L"  File size     : %lld bytes\n", params->FileSizeInBytes.QuadPart);
     wprintf(L"  Padding mode  : %s\n",
             params->PaddingMode == ZERO ? L"Zero" : L"Random");
-    wprintf(L"  Block size    : %ld bytes\n", params->DataBlockSizeInBytes);
-    wprintf(L"  Blocks        : %ld\n", params->NumDataBlock);
-    wprintf(L"  Remainder size: %ld bytes\n", params->RemainderDataSizeInBytes);
+    wprintf(L"  Block size    : %zu bytes\n", params->DataBlockSizeInBytes);
+    wprintf(L"  Blocks        : %lld\n", params->NumDataBlock.QuadPart);
+    wprintf(L"  Remainder size: %zu bytes\n", params->RemainderDataSizeInBytes);
     wprintf(L"\n");
 }
 
@@ -201,23 +199,25 @@ CreateZeroDataFile(HANDLE fileHandle, LARGE_INTEGER fileSizeInBytes)
 
 VOID
 CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
-        SIZE_T numDataBlock, SIZE_T remainderDataSizeInBytes)
+        LARGE_INTEGER numDataBlock, SIZE_T remainderDataSizeInBytes)
 {
-    if (numDataBlock == 0 && remainderDataSizeInBytes == 0)
+    if (numDataBlock.QuadPart == 0 && remainderDataSizeInBytes == 0)
     {
-        return;  // No need write data.
+        return;  // No need to write data.
     }
 
-    // Writing per data block
+    // Write data for the number of blocks.
     if (!WriteDataBlockToFile(fileHandle, dataBlockSizeInBytes, numDataBlock))
     {
         return;
     }
 
-    // Writing remainder data
+    // Write the remainder data
     if (remainderDataSizeInBytes > 0)
     {
-        if (!WriteDataBlockToFile(fileHandle, remainderDataSizeInBytes, 1))
+        LARGE_INTEGER oneBlock {};
+        oneBlock.QuadPart = 1LL;
+        if (!WriteDataBlockToFile(fileHandle, remainderDataSizeInBytes, oneBlock))
         {
             return;
         }
@@ -228,7 +228,6 @@ CreateRandomDataFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes,
 VOID
 GenerateRandomDataBlock(BYTE *dataBlock, SIZE_T dataBlockSizeInBytes)
 {
-
     HCRYPTPROV cryptProviderHandle;
     if (!CryptAcquireContext(&cryptProviderHandle, NULL, NULL, PROV_RSA_FULL,
                              CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
@@ -246,7 +245,7 @@ GenerateRandomDataBlock(BYTE *dataBlock, SIZE_T dataBlockSizeInBytes)
 
 
 BOOL
-WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, SIZE_T numDataBlock)
+WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, LARGE_INTEGER numDataBlock)
 {
     BOOL result = TRUE;
 
@@ -258,7 +257,7 @@ WriteDataBlockToFile(HANDLE fileHandle, SIZE_T dataBlockSizeInBytes, SIZE_T numD
         goto Cleanup;
     }
 
-    for (SIZE_T i = 0; i < numDataBlock; i++)
+    for (LONGLONG i = 0; i < numDataBlock.QuadPart; i++)
     {
         GenerateRandomDataBlock(dataBlock, dataBlockSizeInBytes);
 
